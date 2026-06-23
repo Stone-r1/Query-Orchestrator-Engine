@@ -18,10 +18,17 @@ public class Bid {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "bid_id")
     private Long bidId;
 
+    @Column(name = "user_id")
     private Long userId;
+
+    @Column(name = "auction_id")
     private Long auctionId;
+
     private Double amount;
+
+    @Column(name = "placed_at")
     private LocalDateTime placedAt;
 }

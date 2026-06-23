@@ -7,6 +7,7 @@ import org.example.models.entities.Bid;
 import org.hibernate.Session;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -17,6 +18,12 @@ public class BidQueries {
             Bid bid
     ) {
         session.persist(bid);
+    }
+
+    public void deleteAllBids(
+            Session session
+    ) {
+        session.createMutationQuery("DELETE FROM Bid").executeUpdate();
     }
 
     public List<TopBidder> findTopBidders(
@@ -61,15 +68,28 @@ public class BidQueries {
                 .setParameter("userId", userId)
                 .getResultList();
 
-        session.close();
-
         return rows.stream()
                 .map(r -> new BidRanks(
                         ((Number) r[0]).longValue(),
                         ((Number) r[1]).doubleValue(),
-                        ((Timestamp) r[2]).toLocalDateTime(),
+                        toLocalDateTime(r[2]),
                         ((Number) r[3]).intValue()
                 ))
                 .toList();
+    }
+
+    /*
+     * The JDBC driver may hand back a TIMESTAMP column either as java.sql.Timestamp
+     * (legacy) or java.time.LocalDateTime (PostgreSQL driver for 'timestamp without
+     * time zone'). Normalise both so the mapping never blows up with a ClassCastException.
+     */
+    private static LocalDateTime toLocalDateTime(Object value) {
+        return switch (value) {
+            case null -> null;
+            case LocalDateTime localDateTime -> localDateTime;
+            case Timestamp timestamp -> timestamp.toLocalDateTime();
+            default -> throw new IllegalStateException(
+                    "Unexpected timestamp type: " + value.getClass().getName());
+        };
     }
 }

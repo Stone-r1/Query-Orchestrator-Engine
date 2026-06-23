@@ -34,10 +34,5 @@ public interface QuerySteps {
             }
         };
     }
-
-    /*TODO
-     * Parallel validation mode (concurrently validate multiple queries and aggregate results)
-     * Add RetryPolicy for both - steps and different modes. (i.e. if select failed, wait before going to validation)
-     */
 }
 

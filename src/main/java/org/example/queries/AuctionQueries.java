@@ -16,6 +16,12 @@ public class AuctionQueries {
         session.persist(auction);
     }
 
+    public void deleteAllAuctions(
+            Session session
+    ) {
+        session.createMutationQuery("DELETE FROM Auction").executeUpdate();
+    }
+
     public AuctionStats getAuctionStats(
             Session session,
             Long auctionId

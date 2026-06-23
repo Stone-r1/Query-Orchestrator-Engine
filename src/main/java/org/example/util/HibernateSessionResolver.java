@@ -37,6 +37,8 @@ public abstract class HibernateSessionResolver {
                 properties.load(file);
                 base.putAll(properties);
 
+                HelperFunctions.resolvePlaceholders(base);
+
                 Configuration configuration = new Configuration();
                 configuration.setProperties(base);
 
