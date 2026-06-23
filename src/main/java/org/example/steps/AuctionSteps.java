@@ -9,16 +9,11 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/*
- * Example steps. A step's contract: receive the session, hand it to the page (queries),
- * read something back, and validate it. The session is given by QueryRunner - the step
- * never opens, commits, or closes it. Replace/extend these with your own steps.
- */
+
 public class AuctionSteps {
 
     private final AuctionQueries auctionQueries = new AuctionQueries();
 
-    /* "do something" step: hand the session to the page and persist. */
     public void insertAuction(
             Session session,
             Auction auction
@@ -26,14 +21,12 @@ public class AuctionSteps {
         auctionQueries.insertAuction(session, auction);
     }
 
-    /* "do something" step: remove every auction (parent table - clear after bids). */
     public void clearAuctions(
             Session session
     ) {
         auctionQueries.deleteAllAuctions(session);
     }
 
-    /* "validate" step: read aggregated stats via the page, then assert the expectation. */
     public void validateAuctionStats(
             Session session,
             Long auctionId,
@@ -50,7 +43,6 @@ public class AuctionSteps {
                 .isEqualTo(expectedMaxBid);
     }
 
-    /* "validate" step: confirm the auction shows up among those with maxBid >= minBid. */
     public void validateAuctionAppearsForMinBid(
             Session session,
             Double minBid,

@@ -4,6 +4,7 @@ package org.example.queries;
 import org.example.models.dto.BidRanks;
 import org.example.models.dto.TopBidder;
 import org.example.models.entities.Bid;
+import org.example.util.HelperFunctions;
 import org.hibernate.Session;
 
 import java.sql.Timestamp;
@@ -72,24 +73,9 @@ public class BidQueries {
                 .map(r -> new BidRanks(
                         ((Number) r[0]).longValue(),
                         ((Number) r[1]).doubleValue(),
-                        toLocalDateTime(r[2]),
+                        HelperFunctions.toLocalDateTime(r[2]),
                         ((Number) r[3]).intValue()
                 ))
                 .toList();
-    }
-
-    /*
-     * The JDBC driver may hand back a TIMESTAMP column either as java.sql.Timestamp
-     * (legacy) or java.time.LocalDateTime (PostgreSQL driver for 'timestamp without
-     * time zone'). Normalise both so the mapping never blows up with a ClassCastException.
-     */
-    private static LocalDateTime toLocalDateTime(Object value) {
-        return switch (value) {
-            case null -> null;
-            case LocalDateTime localDateTime -> localDateTime;
-            case Timestamp timestamp -> timestamp.toLocalDateTime();
-            default -> throw new IllegalStateException(
-                    "Unexpected timestamp type: " + value.getClass().getName());
-        };
     }
 }

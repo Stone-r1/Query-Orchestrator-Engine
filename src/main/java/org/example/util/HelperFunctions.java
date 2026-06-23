@@ -2,6 +2,8 @@ package org.example.util;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,5 +53,17 @@ public class HelperFunctions {
 
             properties.setProperty(key, resolved.toString());
         }
+    }
+
+    public static LocalDateTime toLocalDateTime(
+            Object value
+    ) {
+        return switch (value) {
+            case null -> null;
+            case LocalDateTime localDateTime -> localDateTime;
+            case Timestamp timestamp -> timestamp.toLocalDateTime();
+            default -> throw new IllegalStateException(
+                    "Unexpected timestamp type: " + value.getClass().getName());
+        };
     }
 }

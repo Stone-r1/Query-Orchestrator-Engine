@@ -22,7 +22,6 @@ public class BidSteps {
         bidQueries.insertBid(session, bid);
     }
 
-    /* "do something" step: remove every bid (child table - clear before auctions). */
     public void clearBids(
             Session session
     ) {
