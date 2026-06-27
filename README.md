@@ -175,14 +175,17 @@ COMMIT;
 ## Benchmarks
 
 Both suites run the **same six scenarios** - identical SQL, identical assertions, against the
-**~200 000-bid** workload seeded above. The only thing that changes is the runner:
+workload seeded above, measured at **two scales - ~200 000 and ~1 000 000 bids** (the larger run
+just raises the seed script's per-auction multiplier). The only thing that changes is the runner:
 
 - **Classic JDBC** - every validation opens its own connection and the steps run **sequentially**,
   the way most test-automation DAOs are written.
 - **QueryRunner** - the independent validations inside a scenario are dispatched **in parallel**
   through `validateInParallel`, each on its own read-only session.
 
-Average per-step wall-clock, **5 runs each**:
+Average per-step wall-clock, **5 runs each**, at both scales:
+
+**~200 000 bids**
 
 | Step | What it validates                                 |  Classic JDBC |  QueryRunner | Speedup |
 |-----:|---------------------------------------------------|--------------:|-------------:|--------:|
@@ -193,6 +196,18 @@ Average per-step wall-clock, **5 runs each**:
 | 5 | Price metrics - 6 reads                           |        143 ms |        31 ms | ~4.6× |
 | 6 | Intensity & heatmap - 6 reads                     |        146 ms |        29 ms | ~5.0× |
 | | **Total**                                         | **15 654 ms** | **7 936 ms** | **~2.0×** |
+
+**~1 000 000 bids**
+
+| Step | What it validates                                 |   Classic JDBC |   QueryRunner | Speedup |
+|-----:|---------------------------------------------------|---------------:|--------------:|--------:|
+| 1 | Bid totals - *sequential `await` in both*         |         147 ms |        184 ms | 0.8× |
+| 2 | Leaderboards - 6 trivial reads                    |         171 ms |        206 ms | 0.8× |
+| 3 | Bid analysis - 6 reads incl. heavy outbid scan ×2 |     108 000 ms |     56 000 ms | ~1.9× |
+| 4 | User profiles - 6 reads                           |         202 ms |         66 ms | ~3.1× |
+| 5 | Price metrics - 6 reads                           |         270 ms |         64 ms | ~4.2× |
+| 6 | Intensity & heatmap - 6 reads                     |         200 ms |         40 ms | ~5.0× |
+| | **Total**                                         | **108 990 ms** | **56 560 ms** | **~1.9×** |
 
 ### Reading the numbers
 
