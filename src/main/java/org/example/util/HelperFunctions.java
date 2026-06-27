@@ -26,7 +26,7 @@ public class HelperFunctions {
     /*
      * Expands ${VAR} placeholders in every property value, resolving each against
      * environment variables first, then JVM system properties. This is what makes
-     * db.properties entries like hibernate.connection.url=${DB_URL} actually work -
+     * queryRunner.properties entries like hibernate.connection.url=${DB_URL} actually work -
      * java.util.Properties performs no substitution on its own.
      */
     public static void resolvePlaceholders(

@@ -1,14 +1,10 @@
-package org.example.steps;
+package org.example.steps.jdbc;
 
-import org.example.models.dto.AuctionBidderOverlap;
-import org.example.models.dto.AuctionLeaderboardEntry;
-import org.example.models.dto.AuctionPriceVelocity;
-import org.example.models.dto.AuctionStats;
-import org.example.models.dto.OutbidAuctionSummary;
-import org.example.models.entities.Auction;
-import org.example.queries.AuctionQueries;
-import org.hibernate.Session;
+import org.example.models.dto.*;
+import org.example.queries.jdbc.AuctionQueries;
 
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,28 +12,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AuctionSteps {
 
-    private final AuctionQueries auctionQueries = new AuctionQueries();
+    private final AuctionQueries auctionQueries;
 
-    public void insertAuction(
-            Session session,
-            Auction auction
-    ) {
-        auctionQueries.insertAuction(session, auction);
+    public AuctionSteps(AuctionQueries auctionQueries) {
+        this.auctionQueries = auctionQueries;
     }
 
-    public void clearAuctions(
-            Session session
-    ) {
-        auctionQueries.deleteAllAuctions(session);
+    public long insertAuction(
+            String itemName,
+            String itemDescription,
+            Double startingPrice,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Double maxBid,
+            Long sellerId,
+            Long winnerId
+    ) throws SQLException {
+        return auctionQueries.insertAuction(
+                itemName, itemDescription, startingPrice,
+                startDate, endDate, maxBid, sellerId, winnerId
+        );
+    }
+
+    public void clearAuctions() throws SQLException {
+        auctionQueries.deleteAllAuctions();
+    }
+
+    public void clearAuction(
+            long auctionId
+    ) throws SQLException {
+        auctionQueries.deleteAuctionById(auctionId);
     }
 
     public void validateAuctionStats(
-            Session session,
             Long auctionId,
             long expectedBidCount,
             Double expectedMaxBid
-    ) {
-        AuctionStats stats = auctionQueries.getAuctionStats(session, auctionId);
+    ) throws SQLException {
+        AuctionStats stats = auctionQueries.getAuctionStats(auctionId);
 
         assertThat(stats.bidCount())
                 .as("auction %d bid count", auctionId)
@@ -48,25 +60,22 @@ public class AuctionSteps {
     }
 
     public void validateAuctionAppearsForMinBid(
-            Session session,
             Double minBid,
             Long expectedAuctionId
-    ) {
-        List<Auction> auctions = auctionQueries.findByMinMaxBid(session, minBid);
+    ) throws SQLException {
+        List<Long> ids = auctionQueries.findAuctionIdsWithMinMaxBid(minBid);
 
-        assertThat(auctions)
+        assertThat(ids)
                 .as("auctions with maxBid >= %s should contain auction %d", minBid, expectedAuctionId)
-                .extracting(Auction::getAuctionId)
                 .contains(expectedAuctionId);
     }
 
     public void validateAuctionLeaderboard(
-            Session session,
             Long auctionId,
             int expectedBidderCount,
             Long expectedRank1UserId
-    ) {
-        List<AuctionLeaderboardEntry> leaderboard = auctionQueries.findAuctionLeaderboard(session, auctionId);
+    ) throws SQLException {
+        List<AuctionLeaderboardEntry> leaderboard = auctionQueries.findAuctionLeaderboard(auctionId);
 
         assertThat(leaderboard)
                 .as("auction %d leaderboard size", auctionId)
@@ -77,7 +86,7 @@ public class AuctionSteps {
                 .isEqualTo(expectedRank1UserId);
 
         assertThat(leaderboard)
-                .as("all spreads must be non-negative — every top bid must exceed starting price")
+                .as("all spreads must be non-negative")
                 .allSatisfy(entry ->
                         assertThat(entry.spreadFromStartingPrice())
                                 .as("spread for user %d in auction %d", entry.userId(), auctionId)
@@ -86,12 +95,11 @@ public class AuctionSteps {
     }
 
     public void validateAuctionHasOutbidUsers(
-            Session session,
             Long expectedAuctionId,
             long minBidCount,
             long expectedOutbidUserCount
-    ) {
-        List<OutbidAuctionSummary> summaries = auctionQueries.findAuctionsWithOutbidUsers(session, minBidCount);
+    ) throws SQLException {
+        List<OutbidAuctionSummary> summaries = auctionQueries.findAuctionsWithOutbidUsers(minBidCount);
 
         OutbidAuctionSummary match = summaries.stream()
                 .filter(s -> s.auctionId().equals(expectedAuctionId))
@@ -107,10 +115,9 @@ public class AuctionSteps {
     }
 
     public void validateAuctionPriceVelocity(
-            Session session,
             Long auctionId
-    ) {
-        List<AuctionPriceVelocity> quartiles = auctionQueries.findAuctionPriceVelocity(session, auctionId);
+    ) throws SQLException {
+        List<AuctionPriceVelocity> quartiles = auctionQueries.findAuctionPriceVelocity(auctionId);
 
         assertThat(quartiles)
                 .as("auction %d must produce exactly 4 price velocity quartiles", auctionId)
@@ -129,12 +136,11 @@ public class AuctionSteps {
     }
 
     public void validateCrossAuctionBidderOverlap(
-            Session session,
             Long auctionIdA,
             Long auctionIdB,
             long expectedSharedBidders
-    ) {
-        List<AuctionBidderOverlap> overlaps = auctionQueries.findCrossAuctionBidderOverlap(session);
+    ) throws SQLException {
+        List<AuctionBidderOverlap> overlaps = auctionQueries.findCrossAuctionBidderOverlap();
 
         AuctionBidderOverlap match = overlaps.stream()
                 .filter(o -> o.auctionIdA().equals(auctionIdA) && o.auctionIdB().equals(auctionIdB))
@@ -156,4 +162,3 @@ public class AuctionSteps {
                 );
     }
 }
-

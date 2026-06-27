@@ -74,6 +74,6 @@ public abstract class HibernateSessionResolver {
     }
 
     protected final Session openSession() {
-        return resolveSessionFactory(PathConstants.DB_PROPERTIES).openSession();
+        return resolveSessionFactory(PathConstants.QUERY_RUNNER_PROPERTIES).openSession();
     }
 }

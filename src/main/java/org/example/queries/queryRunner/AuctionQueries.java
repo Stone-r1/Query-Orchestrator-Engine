@@ -1,4 +1,4 @@
-package org.example.queries;
+package org.example.queries.queryRunner;
 
 
 import org.example.models.dto.AuctionBidderOverlap;
@@ -25,6 +25,15 @@ public class AuctionQueries {
             Session session
     ) {
         session.createMutationQuery("DELETE FROM Auction").executeUpdate();
+    }
+
+    public void deleteAuctionById(
+            Session session,
+            long auctionId
+    ) {
+        session.createMutationQuery("DELETE FROM Auction a WHERE a.auctionId = :auctionId")
+                .setParameter("auctionId", auctionId)
+                .executeUpdate();
     }
 
     public AuctionStats getAuctionStats(

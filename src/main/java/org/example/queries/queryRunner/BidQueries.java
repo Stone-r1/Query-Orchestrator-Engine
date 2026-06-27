@@ -1,4 +1,4 @@
-package org.example.queries;
+package org.example.queries.queryRunner;
 
 
 import org.example.models.dto.BidEscalationEntry;
@@ -30,6 +30,15 @@ public class BidQueries {
             Session session
     ) {
         session.createMutationQuery("DELETE FROM Bid").executeUpdate();
+    }
+
+    public void deleteBidsByUserIdFrom(
+            Session session,
+            long minUserId
+    ) {
+        session.createMutationQuery("DELETE FROM Bid b WHERE b.userId >= :minUserId")
+                .setParameter("minUserId", minUserId)
+                .executeUpdate();
     }
 
     public List<TopBidder> findTopBidders(
@@ -231,7 +240,10 @@ public class BidQueries {
                 .toList();
     }
 
-    public List<UserSpendRanking> findUserRankingBySpend(Session session) {
+    public List<UserSpendRanking> findUserRankingBySpend(
+            Session session,
+            long minUserId
+    ) {
         List<Object[]> rows = session.createNativeQuery("""
             WITH user_totals AS (
                 SELECT
@@ -239,6 +251,7 @@ public class BidQueries {
                     SUM(b.amount) AS total_spend,
                     COUNT(DISTINCT b.auction_id) AS auctions_participated
                 FROM bid b
+                WHERE b.user_id >= :minUserId
                 GROUP BY b.user_id
             )
             SELECT
@@ -249,6 +262,7 @@ public class BidQueries {
             FROM user_totals ut
             ORDER BY spend_rank
         """)
+                .setParameter("minUserId", minUserId)
                 .getResultList();
 
         return rows.stream()

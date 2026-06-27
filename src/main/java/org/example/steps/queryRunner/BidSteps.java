@@ -1,4 +1,4 @@
-package org.example.steps;
+package org.example.steps.queryRunner;
 
 import org.example.models.dto.BidEscalationEntry;
 import org.example.models.dto.BidIntensitySlot;
@@ -9,7 +9,7 @@ import org.example.models.dto.TopBidder;
 import org.example.models.dto.UserActivityHeatmap;
 import org.example.models.dto.UserSpendRanking;
 import org.example.models.entities.Bid;
-import org.example.queries.BidQueries;
+import org.example.queries.queryRunner.BidQueries;
 import org.hibernate.Session;
 
 import java.util.List;
@@ -32,6 +32,13 @@ public class BidSteps {
             Session session
     ) {
         bidQueries.deleteAllBids(session);
+    }
+
+    public void clearBidsForUsersFrom(
+            Session session,
+            long minUserId
+    ) {
+        bidQueries.deleteBidsByUserIdFrom(session, minUserId);
     }
 
     public void validateTopBidder(
@@ -165,10 +172,11 @@ public class BidSteps {
 
     public void validateUserSpendRanking(
             Session session,
+            long minUserId,
             Long expectedUserId,
             int expectedRank
     ) {
-        List<UserSpendRanking> rankings = bidQueries.findUserRankingBySpend(session);
+        List<UserSpendRanking> rankings = bidQueries.findUserRankingBySpend(session, minUserId);
 
         assertThat(rankings)
                 .as("spend ranking must be non-empty")
